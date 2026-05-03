@@ -1,0 +1,16 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "01_loop": "./step_01_walkthrough/01_loop.py:build_agent",
+    "02_todos": "./step_01_walkthrough/02_todos.py:build_agent",
+    "03_filesystem": "./step_01_walkthrough/03_filesystem.py:build_agent",
+    "03b_backends": "./step_01_walkthrough/03b_backends.py:build_agent",
+    "04_subagents": "./step_01_walkthrough/04_subagents.py:build_agent",
+    "05_permissions": "./step_01_walkthrough/05_permissions.py:build_agent",
+    "06_skills": "./step_01_walkthrough/06_skills.py:build_agent",
+    "02_tiny": "./step_02_tiny_harness/mini.py:_studio_graph",
+    "02_tiny_store": "./step_02_tiny_harness/mini.py:_studio_graph_with_store",
+    "03_mini": "./step_03_mini_clone/graph.py:_studio_graph"
+  },
+  "env": ".env"
+}
