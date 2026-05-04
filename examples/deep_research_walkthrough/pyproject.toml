@@ -1,0 +1,27 @@
+[project]
+name = "deep-research-walkthrough"
+version = "0.1.0"
+description = "Step-by-step walkthrough of how the deep_research example is built"
+requires-python = ">=3.11"
+dependencies = [
+    "deepagents>=0.2.6",
+    "langchain>=1.0.0",
+    "langchain-openai>=1.1.14",
+    "langchain-anthropic>=1.0.3",
+    "langchain-google-genai>=3.1.0",
+    "tavily-python>=0.5.0",
+    "httpx>=0.28.1",
+    "markdownify>=1.2.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "langgraph-cli[inmem]>=0.1.55",
+]
+
+[build-system]
+requires = ["setuptools>=73.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["config"]
+packages = ["steps"]

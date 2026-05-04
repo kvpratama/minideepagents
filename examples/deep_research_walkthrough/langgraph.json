@@ -1,0 +1,11 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "step1_basic_agent": "./steps/step1_basic_agent.py:agent",
+    "step2_thinking_tool": "./steps/step2_thinking_tool.py:agent",
+    "step3_deep_agent": "./steps/step3_deep_agent.py:agent",
+    "step4_subagent": "./steps/step4_subagent.py:agent",
+    "step5_full_orchestrator": "./steps/step5_full_orchestrator.py:agent"
+  },
+  "env": ".env"
+}
