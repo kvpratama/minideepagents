@@ -72,3 +72,12 @@ The following are intentionally omitted from `step_01_walkthrough/`:
 - **`local_shell` / bash tool** — a tool, not a concept; trivial once the
   backend protocol is in place
 - **LangSmith telemetry** — observability layer; outside the kernel
+
+## Examples
+
+`examples/` contains independent, runnable mini-projects that use
+`create_deep_agent()` (and related harness patterns) to demonstrate specific
+end-to-end agent setups.
+
+These examples reference the original Deep Agents examples directory:
+https://github.com/langchain-ai/deepagents/tree/main/examples
