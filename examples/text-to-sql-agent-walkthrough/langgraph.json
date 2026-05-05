@@ -1,0 +1,15 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "stage_01_raw_sql": "./stages/stage_01_raw_sql.py:graph",
+    "stage_02_llm_one_shot": "./stages/stage_02_llm_one_shot.py:graph",
+    "stage_03_schema_introspection": "./stages/stage_03_schema_introspection.py:graph",
+    "stage_04_react_loop": "./stages/stage_04_react_loop.py:graph",
+    "stage_05_create_agent_toolkit": "./stages/stage_05_create_agent_toolkit.py:graph",
+    "stage_06_deep_agent_minimal": "./stages/stage_06_deep_agent_minimal.py:graph",
+    "stage_07_agents_md": "./stages/stage_07_agents_md.py:graph",
+    "stage_08_skills": "./stages/stage_08_skills.py:graph",
+    "stage_09_filesystem_backend": "./stages/stage_09_filesystem_backend.py:graph"
+  },
+  "env": ".env"
+}

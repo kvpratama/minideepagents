@@ -1,0 +1,25 @@
+[project]
+name = "text-to-sql-walkthrough"
+version = "0.1.0"
+description = "A 9-stage rebuild of the text-to-sql-agent example, runnable from CLI and LangGraph Studio."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "langchain>=1.2.3",
+    "langgraph>=1.0.6",
+    "sqlalchemy>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "pydantic-settings>=2.5.0",
+    "rich>=13.0.0",
+    "langgraph-cli[inmem]>=0.4.24",
+    "deepagents>=0.5.6",
+    "langchain-openai>=1.2.1",
+    "langchain-community>=0.4.1",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = []
