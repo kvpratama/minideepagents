@@ -104,7 +104,3 @@ Then open the Studio URL and pick the graph for the stage you want to inspect. Y
 5. Move to stage 02. The `.md` will tell you exactly what changed.
 
 > **Tip:** Every stage from 02 onward is a literal evolution of the previous file. Use `diff stages/stage_NN.py stages/stage_MM.py` to see the minimal delta — this is the fastest way to internalize what each new concept buys you.
-
-## License
-
-MIT — same as the upstream `text-to-sql-agent` example.

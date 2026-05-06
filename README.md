@@ -75,9 +75,6 @@ The following are intentionally omitted from `step_01_walkthrough/`:
 
 ## Examples
 
-`examples/` contains independent, runnable mini-projects that use
-`create_deep_agent()` (and related harness patterns) to demonstrate specific
-end-to-end agent setups.
-
-These examples reference the original Deep Agents examples directory:
-https://github.com/langchain-ai/deepagents/tree/main/examples
+End-to-end mini-projects that use `create_deep_agent()` live in
+[`examples/`](examples/). See [`examples/README.md`](examples/README.md) for
+the catalogue and the staged-walkthrough pattern.
