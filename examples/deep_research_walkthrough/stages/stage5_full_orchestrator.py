@@ -1,8 +1,8 @@
-"""Step 5 — The full orchestrator (matches ``examples/deep_research/agent.py``).
+"""Stage 5 — The full orchestrator (matches ``examples/deep_research/agent.py``).
 
-What's new vs Step 4
+What's new vs Stage 4
 --------------------
-The architecture is identical to Step 4. The difference is the **prompts**.
+The architecture is identical to Stage 4. The difference is the **prompts**.
 Here we use the full three-prompt set vendored from the real example:
 
 - ``RESEARCH_WORKFLOW_INSTRUCTIONS``      — orchestrator workflow + report rules
@@ -11,7 +11,7 @@ Here we use the full three-prompt set vendored from the real example:
 
 Run it::
 
-    uv run python steps/step5_full_orchestrator.py "What are the top 5 LLM coding agents in 2025?"
+    uv run python stages/stage5_full_orchestrator.py "What are the top 5 LLM coding agents in 2025?"
 """
 
 import sys
@@ -20,7 +20,7 @@ from datetime import datetime
 from deepagents import create_deep_agent
 
 from config import get_model
-from steps._shared_tools import tavily_search, think_tool
+from stages._shared_tools import tavily_search, think_tool
 
 # --- vendored from research_agent/prompts.py -------------------------------
 RESEARCH_WORKFLOW_INSTRUCTIONS = """# Research Workflow
@@ -153,7 +153,7 @@ agent = create_deep_agent(
 
 
 def main() -> None:
-    """Run the step from the command line."""
+    """Run the stage from the command line."""
     query = (
         sys.argv[1]
         if len(sys.argv) > 1

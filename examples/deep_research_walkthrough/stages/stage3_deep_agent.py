@@ -1,6 +1,6 @@
-"""Step 3 — Switch to ``create_deep_agent``.
+"""Stage 3 — Switch to ``create_deep_agent``.
 
-What's new vs Step 2
+What's new vs Stage 2
 --------------------
 Replace ``create_agent`` with ``create_deep_agent``. The agent now gains, for
 free, the following built-in tools from the Deep Agents harness:
@@ -8,13 +8,13 @@ free, the following built-in tools from the Deep Agents harness:
 - ``write_todos`` — task planning (TodoListMiddleware)
 - ``ls``, ``read_file``, ``write_file``, ``edit_file``, ``glob``, ``grep`` —
   virtual filesystem (FilesystemMiddleware)
-- ``task`` — sub-agent delegation (SubAgentMiddleware) — unused until Step 4
+- ``task`` — sub-agent delegation (SubAgentMiddleware) — unused until Stage 4
 
 Our explicit ``tools=[...]`` list is *added on top of* those built-ins.
 
 Run it::
 
-    uv run python steps/step3_deep_agent.py "Research how Tavily ranks results"
+    uv run python stages/stage3_deep_agent.py "Research how Tavily ranks results"
 """
 
 import sys
@@ -23,7 +23,7 @@ from datetime import datetime
 from deepagents import create_deep_agent
 
 from config import get_model
-from steps._shared_tools import tavily_search, think_tool
+from stages._shared_tools import tavily_search, think_tool
 
 SYSTEM_PROMPT = f"""You are a research assistant. Today's date is {datetime.now():%Y-%m-%d}.
 
@@ -45,7 +45,7 @@ agent = create_deep_agent(
 
 
 def main() -> None:
-    """Run the step from the command line."""
+    """Run the stage from the command line."""
     query = (
         sys.argv[1]
         if len(sys.argv) > 1

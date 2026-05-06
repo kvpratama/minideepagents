@@ -1,6 +1,6 @@
-"""Step 2 — Add ``think_tool`` and a research-focused system prompt.
+"""Stage 2 — Add ``think_tool`` and a research-focused system prompt.
 
-What's new vs Step 1
+What's new vs Stage 1
 --------------------
 1. A second tool, ``think_tool``, that does nothing but record a reflection
    string. The value is in *forcing the model to pause* between searches.
@@ -8,12 +8,12 @@ What's new vs Step 1
    criteria. (This is a slimmed version of ``RESEARCHER_INSTRUCTIONS`` from
    the real ``deep_research`` example.)
 
-Same architecture as Step 1 — just better behavior because the prompt and
+Same architecture as Stage 1 — just better behavior because the prompt and
 the reflection tool shape *how* the loop runs.
 
 Run it::
 
-    uv run python steps/step2_thinking_tool.py "Compare uv vs poetry"
+    uv run python stages/stage2_thinking_tool.py "Compare uv vs poetry"
 """
 
 import sys
@@ -22,7 +22,7 @@ from datetime import datetime
 from langchain.agents import create_agent
 
 from config import get_model
-from steps._shared_tools import tavily_search, think_tool
+from stages._shared_tools import tavily_search, think_tool
 
 SYSTEM_PROMPT = f"""You are a research assistant. Today's date is {datetime.now():%Y-%m-%d}.
 
@@ -54,7 +54,7 @@ agent = create_agent(
 
 
 def main() -> None:
-    """Run the step from the command line."""
+    """Run the stage from the command line."""
     query = sys.argv[1] if len(sys.argv) > 1 else "Compare uv vs poetry"
     result = agent.invoke({"messages": [{"role": "user", "content": query}]})
     print(result["messages"][-1].content)

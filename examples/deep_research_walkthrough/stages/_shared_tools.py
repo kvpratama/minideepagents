@@ -1,4 +1,4 @@
-"""Tools shared across walkthrough steps."""
+"""Tools shared across walkthrough stages."""
 
 import httpx
 from langchain_core.tools import InjectedToolArg, tool
@@ -89,7 +89,7 @@ def think_tool(reflection: str) -> str:
     decide whether to keep searching or answer.
 
     Args:
-        reflection: Detailed reflection on findings, gaps, and next steps.
+        reflection: Detailed reflection on findings, gaps, and next stages.
 
     Returns:
         Confirmation that the reflection was recorded.

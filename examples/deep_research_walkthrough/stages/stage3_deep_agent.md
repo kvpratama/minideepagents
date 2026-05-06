@@ -1,7 +1,7 @@
-# Step 3 — Trade `create_agent` for `create_deep_agent`
+# Stage 3 — Trade `create_agent` for `create_deep_agent`
 
-## What changed from Step 2
-| | Step 2 | Step 3 |
+## What changed from Stage 2
+| | Stage 2 | Stage 3 |
 |---|---|---|
 | Constructor | `create_agent` | **`create_deep_agent`** |
 | Tools you wrote | `tavily_search`, `think_tool` | unchanged |
@@ -34,7 +34,7 @@ Two new abilities the model can now choose to use:
 
 ## Try it
 ```bash
-uv run python steps/step3_deep_agent.py "Research how Tavily ranks results"
+uv run python stages/stage3_deep_agent.py "Research how Tavily ranks results"
 ```
 
 After the run, the script prints the list of files the agent wrote (you
@@ -42,5 +42,5 @@ should see `/notes.md` and/or `/final_report.md`).
 
 ## Limitations remaining
 We still do everything in **one context window**. For a multi-aspect query,
-the agent's prompt grows with every search result. Step 4 fixes this with
+the agent's prompt grows with every search result. Stage 4 fixes this with
 sub-agents.

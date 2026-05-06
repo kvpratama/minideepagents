@@ -1,7 +1,7 @@
-# Step 2 — Reflection with `think_tool`
+# Stage 2 — Reflection with `think_tool`
 
-## What changed from Step 1
-| | Step 1 | Step 2 |
+## What changed from Stage 1
+| | Stage 1 | Stage 2 |
 |---|---|---|
 | Tools | `tavily_search` | `tavily_search`, **`think_tool`** |
 | Prompt | (none) | research-focused system prompt with budget & stop rules |
@@ -26,7 +26,7 @@ deliberate pause**. The system prompt requires the model to call
 
 ## Try it
 ```bash
-uv run python steps/step2_thinking_tool.py "Compare uv vs poetry"
+uv run python stages/stage2_thinking_tool.py "Compare uv vs poetry"
 ```
 
 You should see alternating `tavily_search` → `think_tool` → `tavily_search`
@@ -37,4 +37,4 @@ calls, and a final answer with `[n]` citations.
 - Still **no filesystem** — research findings live only in the message list.
 - Still **no delegation** — one context window for everything.
 
-That's what `create_deep_agent` solves in Step 3.
+That's what `create_deep_agent` solves in Stage 3.

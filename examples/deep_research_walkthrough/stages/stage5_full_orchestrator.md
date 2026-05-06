@@ -1,7 +1,7 @@
-# Step 5 — The full orchestrator
+# Stage 5 — The full orchestrator
 
-## What changed from Step 4
-| | Step 4 | Step 5 |
+## What changed from Stage 4
+| | Stage 4 | Stage 5 |
 |---|---|---|
 | Architecture | orchestrator + 1 sub-agent | **same** |
 | Orchestrator prompt | minimal (~10 lines) | full `RESEARCH_WORKFLOW_INSTRUCTIONS` + `SUBAGENT_DELEGATION_INSTRUCTIONS` |
@@ -18,7 +18,7 @@ Diff them. The only meaningful differences are:
 - The three prompt blocks are vendored inline here for self-containment.
   In the real example they live in `research_agent/prompts.py`.
 
-That's it. **Step 5 is the example.**
+That's it. **Stage 5 is the example.**
 
 ## What the prompts contribute
 
@@ -28,13 +28,13 @@ That's it. **Step 5 is the example.**
 | `SUBAGENT_DELEGATION_INSTRUCTIONS` | when to use 1 vs N sub-agents, parallelization limits, iteration cap |
 | `RESEARCHER_INSTRUCTIONS` | per-sub-agent search budget, reflection-after-search rule, stopping criteria, response format |
 
-These are *purely prompt engineering* — no new code is needed in this step.
+These are *purely prompt engineering* — no new code is needed in this stage.
 That's the whole pitch of Deep Agents: most of the "intelligence" comes from
 prompts on top of a small, fixed middleware stack.
 
 ## Try it
 ```bash
-uv run python steps/step5_full_orchestrator.py "What are the top 5 LLM coding agents in 2025?"
+uv run python stages/stage5_full_orchestrator.py "What are the top 5 LLM coding agents in 2025?"
 ```
 
 After the run, the agent should have written both `/research_request.md`

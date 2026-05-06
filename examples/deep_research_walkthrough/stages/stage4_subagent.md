@@ -1,7 +1,7 @@
-# Step 4 — Delegate to a sub-agent
+# Stage 4 — Delegate to a sub-agent
 
-## What changed from Step 3
-| | Step 3 | Step 4 |
+## What changed from Stage 3
+| | Stage 3 | Stage 4 |
 |---|---|---|
 | Top-level prompt | "do research yourself" | "**delegate** research; never search yourself" |
 | Sub-agents | none | one (`research-agent`) |
@@ -43,7 +43,7 @@ prompt. That's the whole point.
 
 ## Try it
 ```bash
-uv run python steps/step4_subagent.py "Compare DuckDB vs SQLite for analytics"
+uv run python stages/stage4_subagent.py "Compare DuckDB vs SQLite for analytics"
 ```
 
 For a comparison query like this, the orchestrator should issue **two
@@ -54,4 +54,4 @@ results.
 The prompts here are intentionally minimal. The real `deep_research`
 example has carefully tuned instructions for: planning batches, parallel
 limits, iteration limits, citation consolidation, and report structure.
-That's Step 5.
+That's Stage 5.

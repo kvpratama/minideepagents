@@ -1,4 +1,4 @@
-# Step 1 — A plain LangChain agent
+# Stage 1 — A plain LangChain agent
 
 ## What you'll build
 The simplest possible research agent: a `create_agent` loop with **one tool**
@@ -7,7 +7,7 @@ filesystem.
 
 ## Why start here
 Everything Deep Agents adds is *opinionated middleware on top of this loop*.
-Knowing what bare metal looks like makes each later step's contribution
+Knowing what bare metal looks like makes each later stage's contribution
 obvious.
 
 ## What's happening
@@ -22,7 +22,7 @@ assistant message.
 
 ## Try it
 ```bash
-uv run python steps/step1_basic_agent.py "What is LangGraph?"
+uv run python stages/stage1_basic_agent.py "What is LangGraph?"
 ```
 
 ## Things to notice (limitations)
@@ -31,4 +31,4 @@ uv run python steps/step1_basic_agent.py "What is LangGraph?"
 - **No memory beyond the message list.** Every observation is in the prompt.
 - **No delegation.** One agent, one context window.
 
-These are exactly the gaps the next four steps fill in.
+These are exactly the gaps the next four stages fill in.
