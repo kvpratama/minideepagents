@@ -34,7 +34,7 @@ Two new abilities the model can now choose to use:
 
 ## Try it
 ```bash
-uv run python stages/stage3_deep_agent.py "Research how Tavily ranks results"
+uv run python stages/stage_03_deep_agent.py "Research how Tavily ranks results"
 ```
 
 After the run, the script prints the list of files the agent wrote (you

@@ -11,7 +11,7 @@ what later stages add.
 
 Run it::
 
-    uv run python stages/stage1_basic_agent.py "What is LangGraph?"
+    uv run python stages/stage_01_basic_agent.py "What is LangGraph?"
 """
 
 import sys

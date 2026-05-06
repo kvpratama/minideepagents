@@ -13,7 +13,7 @@ the reflection tool shape *how* the loop runs.
 
 Run it::
 
-    uv run python stages/stage2_thinking_tool.py "Compare uv vs poetry"
+    uv run python stages/stage_02_thinking_tool.py "Compare uv vs poetry"
 """
 
 import sys

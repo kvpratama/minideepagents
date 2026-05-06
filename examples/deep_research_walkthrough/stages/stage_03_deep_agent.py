@@ -14,7 +14,7 @@ Our explicit ``tools=[...]`` list is *added on top of* those built-ins.
 
 Run it::
 
-    uv run python stages/stage3_deep_agent.py "Research how Tavily ranks results"
+    uv run python stages/stage_03_deep_agent.py "Research how Tavily ranks results"
 """
 
 import sys

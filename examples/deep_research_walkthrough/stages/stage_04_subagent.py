@@ -13,7 +13,7 @@ raw web pages it read along the way.
 
 Run it::
 
-    uv run python stages/stage4_subagent.py "Compare DuckDB vs SQLite for analytics"
+    uv run python stages/stage_04_subagent.py "Compare DuckDB vs SQLite for analytics"
 """
 
 import sys

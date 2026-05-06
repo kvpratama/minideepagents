@@ -34,7 +34,7 @@ prompts on top of a small, fixed middleware stack.
 
 ## Try it
 ```bash
-uv run python stages/stage5_full_orchestrator.py "What are the top 5 LLM coding agents in 2025?"
+uv run python stages/stage_05_full_orchestrator.py "What are the top 5 LLM coding agents in 2025?"
 ```
 
 After the run, the agent should have written both `/research_request.md`

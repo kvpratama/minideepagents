@@ -26,7 +26,7 @@ deliberate pause**. The system prompt requires the model to call
 
 ## Try it
 ```bash
-uv run python stages/stage2_thinking_tool.py "Compare uv vs poetry"
+uv run python stages/stage_02_thinking_tool.py "Compare uv vs poetry"
 ```
 
 You should see alternating `tavily_search` → `think_tool` → `tavily_search`

@@ -1,11 +1,11 @@
 {
   "dependencies": ["."],
   "graphs": {
-    "stage1_basic_agent": "./stages/stage1_basic_agent.py:agent",
-    "stage2_thinking_tool": "./stages/stage2_thinking_tool.py:agent",
-    "stage3_deep_agent": "./stages/stage3_deep_agent.py:agent",
-    "stage4_subagent": "./stages/stage4_subagent.py:agent",
-    "stage5_full_orchestrator": "./stages/stage5_full_orchestrator.py:agent"
+    "stage_01_basic_agent": "./stages/stage_01_basic_agent.py:agent",
+    "stage_02_thinking_tool": "./stages/stage_02_thinking_tool.py:agent",
+    "stage_03_deep_agent": "./stages/stage_03_deep_agent.py:agent",
+    "stage_04_subagent": "./stages/stage_04_subagent.py:agent",
+    "stage_05_full_orchestrator": "./stages/stage_05_full_orchestrator.py:agent"
   },
   "env": ".env"
 }

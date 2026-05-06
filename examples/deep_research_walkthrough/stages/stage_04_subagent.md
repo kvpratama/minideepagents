@@ -43,7 +43,7 @@ prompt. That's the whole point.
 
 ## Try it
 ```bash
-uv run python stages/stage4_subagent.py "Compare DuckDB vs SQLite for analytics"
+uv run python stages/stage_04_subagent.py "Compare DuckDB vs SQLite for analytics"
 ```
 
 For a comparison query like this, the orchestrator should issue **two

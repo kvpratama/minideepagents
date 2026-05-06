@@ -11,7 +11,7 @@ Here we use the full three-prompt set vendored from the real example:
 
 Run it::
 
-    uv run python stages/stage5_full_orchestrator.py "What are the top 5 LLM coding agents in 2025?"
+    uv run python stages/stage_05_full_orchestrator.py "What are the top 5 LLM coding agents in 2025?"
 """
 
 import sys
