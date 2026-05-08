@@ -1,0 +1,22 @@
+[project]
+name = "better-harness-walkthrough"
+version = "0.1.0"
+description = "An incremental rebuild of the better-harness example — from eval harness to hill-climbing Deep Agent."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "deepagents>=0.5.7",
+    "langchain>=1.2.17",
+    "langchain-openai>=1.2.1",
+    "langgraph>=1.1.10",
+    "pydantic-settings>=2.14.0",
+    "python-dotenv>=1.2.2",
+]
+
+[build-system]
+requires = ["setuptools>=75.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["stages", "stages_b"]
+py-modules = ["config"]
