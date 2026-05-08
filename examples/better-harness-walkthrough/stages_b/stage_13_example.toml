@@ -1,0 +1,50 @@
+# Stage 13 example experiment.
+#
+# Show with:
+#   uv run python stages_b/stage_13_toml_config_and_cli.py \
+#       validate stages_b/stage_13_example.toml
+#
+# Run with:
+#   uv run python stages_b/stage_13_toml_config_and_cli.py \
+#       run stages_b/stage_13_example.toml
+
+[experiment]
+name = "math-prompt-tier-b-13"
+max_iterations = 2
+
+# One module_attr surface — the inner agent's prompt, patched in process.
+[surfaces.prompt]
+kind = "module_attr"
+target = "stages_b.stage_13_toml_config_and_cli:BASE_PROMPT"
+filename = "prompt.txt"
+base_value = """
+You are a helpful assistant.
+"""
+
+# train: visible failures are shown to the outer agent
+[[cases]]
+question = "A bakery sells 3 cakes at $12 each. What is the total revenue?"
+expected = "36"
+split = "train"
+
+[[cases]]
+question = "If you divide 144 by 12, what do you get?"
+expected = "12"
+split = "train"
+
+# holdout: kept out of the proposer brief, used to score every candidate
+[[cases]]
+question = "A train travels at 60 mph for 2.5 hours. How many miles does it cover?"
+expected = "150"
+split = "holdout"
+
+[[cases]]
+question = "What is 15% of 200?"
+expected = "30"
+split = "holdout"
+
+# scorecard: never seen during the loop; runs once on baseline + final
+[[cases]]
+question = "If a rectangle is 7 by 4, what is its area?"
+expected = "28"
+split = "scorecard"
