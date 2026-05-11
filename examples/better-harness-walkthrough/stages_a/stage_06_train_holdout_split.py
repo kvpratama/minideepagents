@@ -322,13 +322,9 @@ def main() -> None:
     baseline_train = run_eval(CASES, inner_agent, split="train")
     print(f"\nTrain: {baseline_train.passed}/{baseline_train.total}")
 
-    import time; time.sleep(15)
-
     print("\n=== Baseline — Holdout ===\n")
     baseline_holdout = run_eval(CASES, inner_agent, split="holdout")
     print(f"\nHoldout: {baseline_holdout.passed}/{baseline_holdout.total}")
-
-    import time; time.sleep(15)
 
     # 2. Propose (outer agent only sees train failures)
     print("\n=== Outer agent proposing (sees only train failures)… ===\n")
@@ -339,13 +335,9 @@ def main() -> None:
     proposed = Variant(label="proposed", values={"prompt": proposed_prompt})
     apply_variant(proposed, SURFACES)
 
-    import time; time.sleep(15)
-
     print("=== Proposed — Train ===\n")
     proposed_train = run_eval(CASES, inner_agent, split="train")
     print(f"\nTrain: {proposed_train.passed}/{proposed_train.total}")
-
-    import time; time.sleep(15)
 
     print("\n=== Proposed — Holdout ===\n")
     proposed_holdout = run_eval(CASES, inner_agent, split="holdout")

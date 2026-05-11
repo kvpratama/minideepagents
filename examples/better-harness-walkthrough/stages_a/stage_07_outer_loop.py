@@ -383,7 +383,6 @@ def loop(
             f"holdout {cand_holdout.passed}/{cand_holdout.total}  "
             f"combined {cand_combined}  ({reason})\n"
         )
-        import time; time.sleep(15)
 
     return current, records
 

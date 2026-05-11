@@ -22,7 +22,7 @@ from deepagents.backends import FilesystemBackend
 from langchain.agents import create_agent
 from langchain.tools import tool
 
-from config import get_model, get_settings
+from config import get_model
 
 # ── Data model ───────────────────────────────────────────────────────────────
 
@@ -279,14 +279,10 @@ def main() -> None:
     baseline_passed, total, failures = run_eval(CASES, inner_agent)
     print(f"\nBaseline: {baseline_passed}/{total}")
 
-    import time; time.sleep(15)
-
     # 2. Propose
     print("\n=== Outer agent proposing… ===\n")
     proposed_prompt = propose(baseline.values["prompt"], failures)
     print(f"Proposed prompt:\n{proposed_prompt}\n")
-
-    import time; time.sleep(15)
 
     # 3. Patch and re-eval
     proposed = Variant(label="proposed", values={"prompt": proposed_prompt})

@@ -214,7 +214,6 @@ def main() -> None:
     baseline_passed, total = run_eval(CASES, inner_agent)
     print(f"\nBaseline: {baseline_passed}/{total}")
 
-    import time; time.sleep(15)
     # 2. Apply the hand-crafted improved variant
     #    KEY ORDER: patch FIRST, then build and invoke the agent.
     improved = Variant(label="improved", values={"prompt": IMPROVED_PROMPT})
