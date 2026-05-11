@@ -37,15 +37,15 @@ agent**, guided by a hill-climbing loop on train/holdout eval splits.
 Every stage is a standalone script.  Run from the walkthrough root:
 
 ```bash
-# Tier A — stages 01-08 (under stages/)
-uv run python stages/stage_01_eval_harness.py        # no LLM needed
-uv run python stages/stage_02_inner_agent.py
-uv run python stages/stage_03_surface.py
-uv run python stages/stage_04_patching.py
-uv run python stages/stage_05_outer_agent.py
-uv run python stages/stage_06_train_holdout_split.py
-uv run python stages/stage_07_outer_loop.py
-uv run python stages/stage_08_multi_surface.py
+# Tier A — stages 01-08 (under stages_a/)
+uv run python stages_a/stage_01_eval_harness.py        # no LLM needed
+uv run python stages_a/stage_02_inner_agent.py
+uv run python stages_a/stage_03_surface.py
+uv run python stages_a/stage_04_patching.py
+uv run python stages_a/stage_05_outer_agent.py
+uv run python stages_a/stage_06_train_holdout_split.py
+uv run python stages_a/stage_07_outer_loop.py
+uv run python stages_a/stage_08_multi_surface.py
 
 # Tier B — stages 09-14 (under stages_b/)
 uv run python stages_b/stage_09_workspace_file_surface.py

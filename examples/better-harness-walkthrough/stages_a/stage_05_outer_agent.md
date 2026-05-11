@@ -19,7 +19,7 @@ yet — exactly one proposal, then read the result back.
 ## Run it
 
 ```bash
-uv run python stages/stage_05_outer_agent.py
+uv run python stages_a/stage_05_outer_agent.py
 ```
 
 Expected output: the proposed prompt is different from the baseline.  The

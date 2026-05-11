@@ -20,7 +20,7 @@ inner agent actually uses it."
 ## Run it
 
 ```bash
-uv run python stages/stage_04_patching.py
+uv run python stages_a/stage_04_patching.py
 ```
 
 Expected output: the improved variant scores strictly higher than the

@@ -19,7 +19,7 @@ on both train and holdout.
 ## Run it
 
 ```bash
-uv run python stages/stage_06_train_holdout_split.py
+uv run python stages_a/stage_06_train_holdout_split.py
 ```
 
 Expected output: baseline and proposed scores on both train and holdout.

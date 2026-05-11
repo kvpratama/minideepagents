@@ -6,7 +6,7 @@ exactly one proposal, then read the result back.
 
 Run::
 
-    uv run python stages/stage_05_outer_agent.py
+    uv run python stages_a/stage_05_outer_agent.py
 """
 
 from __future__ import annotations

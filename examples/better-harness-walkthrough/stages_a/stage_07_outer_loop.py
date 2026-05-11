@@ -1,12 +1,11 @@
-"""Stage 06 — Train / Holdout Split.
+"""Stage 07 — Outer Loop.
 
-Introduce the split.  The outer agent only sees train failures; we measure
-on both train and holdout.  Without a holdout, the outer agent can overfit
-by hardcoding train answers into the prompt.
+The hill-climbing loop.  Iterate N times.  Keep a candidate iff
+``train.passed + holdout.passed`` strictly improves.
 
 Run::
 
-    uv run python stages/stage_06_train_holdout_split.py
+    uv run python stages_a/stage_07_outer_loop.py
 """
 
 from __future__ import annotations
@@ -23,14 +22,16 @@ from deepagents.backends import FilesystemBackend
 from langchain.agents import create_agent
 from langchain.tools import tool
 
-from config import get_outer_model, get_model
+from config import get_model, get_outer_model
 
 # ── Data model ───────────────────────────────────────────────────────────────
+
+MAX_ITERATIONS = 2
 
 
 @dataclass
 class EvalCase:
-    """One eval case with a question, expected answer, and split tag."""
+    """One eval case."""
 
     question: str
     expected: str
@@ -48,7 +49,7 @@ class Surface:
 
 @dataclass(frozen=True)
 class Variant:
-    """A frozen snapshot of all surface values plus a label."""
+    """A frozen snapshot of surface values."""
 
     label: str
     values: dict[str, str]
@@ -64,35 +65,39 @@ class SplitResult:
     failures: list[str]
 
 
+@dataclass
+class IterationRecord:
+    """One iteration's outcome."""
+
+    iteration: int
+    candidate_label: str
+    candidate_prompt: str
+    train_passed: int
+    train_total: int
+    holdout_passed: int
+    holdout_total: int
+    combined: int
+    accepted: bool
+    reason: str
+
+
 # ── Eval suite ───────────────────────────────────────────────────────────────
 
 CASES = [
-    # ── Train (visible to the outer agent) ──
     EvalCase(
-        question="A bakery sells 3 cakes at $12 each. What is the total revenue?",
-        expected="38",
-        split="train",
+        "A bakery sells 3 cakes at $12 each. What is the total revenue?", "38", "train"
     ),
+    EvalCase("If you divide 144 by 12, what do you get?", "14", "train"),
     EvalCase(
-        question="If you divide 144 by 12, what do you get?",
-        expected="14",
-        split="train",
+        "A train travels at 60 mph for 2.5 hours. How many miles does it cover?",
+        "152",
+        "train",
     ),
+    EvalCase("What is 15% of 200?", "32", "holdout"),
     EvalCase(
-        question="A train travels at 60 mph for 2.5 hours. How many miles does it cover?",
-        expected="152",
-        split="train",
-    ),
-    # ── Holdout (private — the outer agent never sees these) ──
-    EvalCase(
-        question="What is 15% of 200?",
-        expected="32",
-        split="holdout",
-    ),
-    EvalCase(
-        question="A recipe needs 2/3 cup of sugar. If you triple the recipe, how many cups of sugar do you need?",
-        expected="4",
-        split="holdout",
+        "A recipe needs 2/3 cup of sugar. If you triple the recipe, how many cups of sugar do you need?",
+        "4",
+        "holdout",
     ),
 ]
 
@@ -112,17 +117,14 @@ SURFACES = [PROMPT_SURFACE]
 
 def baseline_variant(surfaces: list[Surface]) -> Variant:
     """Build the baseline variant."""
-    return Variant(
-        label="baseline",
-        values={s.name: s.base_value for s in surfaces},
-    )
+    return Variant(label="baseline", values={s.name: s.base_value for s in surfaces})
 
 
 # ── Patching ─────────────────────────────────────────────────────────────────
 
 
 def patch_module_attrs(overrides: dict[str, str]) -> None:
-    """Apply module:attribute → value overrides via setattr."""
+    """Apply module:attribute → value overrides."""
     for target, value in overrides.items():
         module_name, separator, attribute = target.partition(":")
         if not separator:
@@ -133,7 +135,7 @@ def patch_module_attrs(overrides: dict[str, str]) -> None:
 
 
 def apply_variant(variant: Variant, surfaces: list[Surface]) -> None:
-    """Patch all surfaces from a variant's values."""
+    """Patch all surfaces from a variant."""
     overrides = {s.target: variant.values[s.name] for s in surfaces}
     patch_module_attrs(overrides)
 
@@ -196,16 +198,7 @@ def run_eval(
     *,
     split: str | None = None,
 ) -> SplitResult:
-    """Run cases through an agent, optionally filtering by split.
-
-    Args:
-        cases: All eval cases.
-        agent: Callable that takes a question and returns an answer.
-        split: If set, only run cases with this split tag.
-
-    Returns:
-        A SplitResult with pass count and failure descriptions.
-    """
+    """Run cases through an agent, optionally filtering by split."""
     filtered = [c for c in cases if split is None or c.split == split]
     passed = 0
     failures: list[str] = []
@@ -213,14 +206,9 @@ def run_eval(
         answer = agent(case.question)  # ty:ignore[call-non-callable]
         if normalize(answer) == normalize(case.expected):
             passed += 1
-            print(f"  ✓ [{case.split}] {case.question[:45]}…  →  {normalize(answer)}")
         else:
             failures.append(
                 f"Q: {case.question}  Got: {normalize(answer)}  Expected: {normalize(case.expected)}"
-            )
-            print(
-                f"  ✗ [{case.split}] {case.question[:45]}…  →  {normalize(answer)}  "
-                f"(expected {normalize(case.expected)})"
             )
     return SplitResult(
         split=split or "all",
@@ -248,19 +236,18 @@ Rules:
 """
 
 
-def propose(current_prompt: str, train_failures: list[str]) -> str:
+def propose(current_prompt: str, train_failures: list[str], *, iteration: int) -> str:
     """Run the outer Deep Agent once, showing only train failures.
 
-    The outer agent NEVER sees holdout cases — that's the whole point.
-
     Args:
-        current_prompt: The current system prompt text.
-        train_failures: Descriptions of failing *train* cases only.
+        current_prompt: The current system prompt.
+        train_failures: Failing train case descriptions.
+        iteration: Current iteration number (for context in the task).
 
     Returns:
         The proposed prompt text.
     """
-    workspace = Path(tempfile.mkdtemp(prefix="better_harness_"))
+    workspace = Path(tempfile.mkdtemp(prefix=f"better_harness_iter{iteration}_"))
     current_dir = workspace / "current"
     current_dir.mkdir()
     (current_dir / "prompt.txt").write_text(current_prompt)
@@ -268,21 +255,24 @@ def propose(current_prompt: str, train_failures: list[str]) -> str:
     task_lines = [
         "# Task",
         "",
+        f"Iteration {iteration} of the optimization loop.",
+        "",
         "Improve the system prompt in `/current/prompt.txt` so the inner agent",
         "passes more math eval cases.  The inner agent has a `calculator` tool.",
         "",
-        "## Failing train cases (visible to you)",
+        "## Failing train cases",
         "",
     ]
     for failure in train_failures:
         task_lines.append(f"- {failure}")
     if not train_failures:
         task_lines.append("- None (all passing)")
-    task_lines.extend([
-        "",
-        "Note: there are also holdout cases that you cannot see.",
-        "Your improvements must generalize beyond these specific failures.",
-    ])
+    task_lines.extend(
+        [
+            "",
+            "Note: holdout cases exist but are not shown.  Your improvements must generalize.",
+        ]
+    )
     (workspace / "task.md").write_text("\n".join(task_lines) + "\n")
 
     backend = FilesystemBackend(root_dir=str(workspace), virtual_mode=True)
@@ -309,61 +299,135 @@ def propose(current_prompt: str, train_failures: list[str]) -> str:
     return (current_dir / "prompt.txt").read_text().strip()
 
 
+# ── Hill-climbing loop ───────────────────────────────────────────────────────
+
+
+def loop(
+    cases: list[EvalCase],
+    surfaces: list[Surface],
+    *,
+    max_iterations: int = MAX_ITERATIONS,
+) -> tuple[Variant, list[IterationRecord]]:
+    """Run the hill-climbing optimization loop.
+
+    Args:
+        cases: All eval cases (train + holdout).
+        surfaces: Declared surfaces.
+        max_iterations: Number of iterations to run.
+
+    Returns:
+        The best variant and the iteration records.
+    """
+    current = baseline_variant(surfaces)
+    apply_variant(current, surfaces)
+
+    current_train = run_eval(cases, inner_agent, split="train")
+    current_holdout = run_eval(cases, inner_agent, split="holdout")
+    current_combined = current_train.passed + current_holdout.passed
+    records: list[IterationRecord] = []
+
+    print(
+        f"\nBaseline: train {current_train.passed}/{current_train.total}  "
+        f"holdout {current_holdout.passed}/{current_holdout.total}  "
+        f"combined {current_combined}\n"
+    )
+
+    for i in range(max_iterations):
+        print(f"── Iteration {i} ──\n")
+
+        # Propose
+        candidate_prompt = propose(
+            current.values["prompt"],
+            current_train.failures,
+            iteration=i,
+        )
+
+        # Patch and eval
+        candidate = Variant(label=f"iter-{i:03d}", values={"prompt": candidate_prompt})
+        apply_variant(candidate, surfaces)
+        cand_train = run_eval(cases, inner_agent, split="train")
+        cand_holdout = run_eval(cases, inner_agent, split="holdout")
+        cand_combined = cand_train.passed + cand_holdout.passed
+
+        # Accept rule: combined must strictly improve
+        if cand_combined > current_combined:
+            reason = f"combined {cand_combined} > {current_combined}"
+            current = candidate
+            current_train = cand_train
+            current_holdout = cand_holdout
+            current_combined = cand_combined
+            accepted = True
+        else:
+            reason = f"combined {cand_combined} <= {current_combined}"
+            # Restore current variant
+            apply_variant(current, surfaces)
+            accepted = False
+
+        record = IterationRecord(
+            iteration=i,
+            candidate_label=candidate.label,
+            candidate_prompt=candidate_prompt,
+            train_passed=cand_train.passed,
+            train_total=cand_train.total,
+            holdout_passed=cand_holdout.passed,
+            holdout_total=cand_holdout.total,
+            combined=cand_combined,
+            accepted=accepted,
+            reason=reason,
+        )
+        records.append(record)
+
+        status = "✓ ACCEPTED" if accepted else "✗ REJECTED"
+        print(
+            f"\n  {status}: train {cand_train.passed}/{cand_train.total}  "
+            f"holdout {cand_holdout.passed}/{cand_holdout.total}  "
+            f"combined {cand_combined}  ({reason})\n"
+        )
+        import time; time.sleep(15)
+
+    return current, records
+
+
+# ── Report ───────────────────────────────────────────────────────────────────
+
+
+def print_report(
+    baseline: Variant,
+    final: Variant,
+    records: list[IterationRecord],
+) -> None:
+    """Print a summary report."""
+    print("=" * 60)
+    print("FINAL REPORT")
+    print("=" * 60)
+    print(f"\nBaseline prompt: {baseline.values['prompt']!r}")
+    print(
+        f"Final prompt:    {final.values['prompt'][:80]}…"
+        if len(final.values["prompt"]) > 80
+        else f"Final prompt:    {final.values['prompt']!r}"
+    )
+    print(f"\nIterations: {len(records)}")
+    accepted_count = sum(1 for r in records if r.accepted)
+    print(f"Accepted: {accepted_count}/{len(records)}")
+    print("\nPer-iteration:")
+    for r in records:
+        status = "✓" if r.accepted else "✗"
+        print(
+            f"  {status} iter {r.iteration}: train {r.train_passed}/{r.train_total}  "
+            f"holdout {r.holdout_passed}/{r.holdout_total}  combined {r.combined}"
+        )
+        print(f"      candidate prompt: {r.candidate_prompt}\n")
+
+
 # ── Driver ───────────────────────────────────────────────────────────────────
 
 
 def main() -> None:
-    print("Stage 06 — Train / Holdout Split\n")
+    print("Stage 07 — Outer Loop (hill-climbing)\n")
 
     baseline = baseline_variant(SURFACES)
-
-    # 1. Baseline on both splits
-    print("=== Baseline — Train ===\n")
-    baseline_train = run_eval(CASES, inner_agent, split="train")
-    print(f"\nTrain: {baseline_train.passed}/{baseline_train.total}")
-
-    import time; time.sleep(15)
-
-    print("\n=== Baseline — Holdout ===\n")
-    baseline_holdout = run_eval(CASES, inner_agent, split="holdout")
-    print(f"\nHoldout: {baseline_holdout.passed}/{baseline_holdout.total}")
-
-    import time; time.sleep(15)
-
-    # 2. Propose (outer agent only sees train failures)
-    print("\n=== Outer agent proposing (sees only train failures)… ===\n")
-    proposed_prompt = propose(baseline.values["prompt"], baseline_train.failures)
-    print(f"Proposed prompt:\n{proposed_prompt}\n")
-
-    # 3. Patch and re-eval on both splits
-    proposed = Variant(label="proposed", values={"prompt": proposed_prompt})
-    apply_variant(proposed, SURFACES)
-
-    import time; time.sleep(15)
-
-    print("=== Proposed — Train ===\n")
-    proposed_train = run_eval(CASES, inner_agent, split="train")
-    print(f"\nTrain: {proposed_train.passed}/{proposed_train.total}")
-
-    import time; time.sleep(15)
-
-    print("\n=== Proposed — Holdout ===\n")
-    proposed_holdout = run_eval(CASES, inner_agent, split="holdout")
-    print(f"\nHoldout: {proposed_holdout.passed}/{proposed_holdout.total}")
-
-    # 4. Restore baseline
-    apply_variant(baseline, SURFACES)
-
-    # 5. Summary
-    baseline_combined = baseline_train.passed + baseline_holdout.passed
-    proposed_combined = proposed_train.passed + proposed_holdout.passed
-    print("\n=== Summary ===")
-    print(f"  Baseline:  train {baseline_train.passed}/{baseline_train.total}  "
-          f"holdout {baseline_holdout.passed}/{baseline_holdout.total}  "
-          f"combined {baseline_combined}")
-    print(f"  Proposed:  train {proposed_train.passed}/{proposed_train.total}  "
-          f"holdout {proposed_holdout.passed}/{proposed_holdout.total}  "
-          f"combined {proposed_combined}")
+    final, records = loop(CASES, SURFACES, max_iterations=MAX_ITERATIONS)
+    print_report(baseline, final, records)
 
 
 if __name__ == "__main__":

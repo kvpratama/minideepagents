@@ -23,7 +23,7 @@ in one iteration.
 ## Run it
 
 ```bash
-uv run python stages/stage_08_multi_surface.py
+uv run python stages_a/stage_08_multi_surface.py
 ```
 
 Expected output: the outer agent edits both surfaces in at least one

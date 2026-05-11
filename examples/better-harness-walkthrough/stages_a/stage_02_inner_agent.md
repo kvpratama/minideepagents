@@ -18,7 +18,7 @@ something *worth* improving.
 ## Run it
 
 ```bash
-uv run python stages/stage_02_inner_agent.py
+uv run python stages_a/stage_02_inner_agent.py
 ```
 
 Expected output: a mixed score — the agent will get some problems right

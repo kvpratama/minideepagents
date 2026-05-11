@@ -6,7 +6,7 @@ actually uses the new values."
 
 Run::
 
-    uv run python stages/stage_04_patching.py
+    uv run python stages_a/stage_04_patching.py
 """
 
 from __future__ import annotations

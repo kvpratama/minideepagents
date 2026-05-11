@@ -6,7 +6,7 @@ runner that counts pass/fail.
 
 Run::
 
-    uv run python stages/stage_01_eval_harness.py
+    uv run python stages_a/stage_01_eval_harness.py
 """
 
 from __future__ import annotations

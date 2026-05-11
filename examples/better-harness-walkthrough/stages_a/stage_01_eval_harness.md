@@ -17,7 +17,7 @@ Everything — this is the starting point:
 ## Run it
 
 ```bash
-uv run python stages/stage_01_eval_harness.py
+uv run python stages_a/stage_01_eval_harness.py
 ```
 
 Expected output: `Passed: 0/5` (the stub always returns "42").

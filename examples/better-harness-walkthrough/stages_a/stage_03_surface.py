@@ -1,13 +1,12 @@
-"""Stage 02 — Inner Agent.
+"""Stage 03 — Surface & Variant.
 
-Replace the scripted stub with a real LangChain agent that has a calculator
-tool.  The deliberately vague system prompt ("You are a helpful assistant.")
-means the agent will sometimes do mental math instead of reaching for the
-tool — giving us a baseline score to improve.
+Introduce ``Surface`` and ``Variant`` — the data model that makes "what is
+editable" first-class.  We don't *apply* a variant yet (that's stage 04);
+we just declare the baseline and print it.
 
 Run::
 
-    uv run python stages/stage_02_inner_agent.py
+    uv run python stages_a/stage_03_surface.py
 """
 
 from __future__ import annotations
@@ -17,9 +16,10 @@ from dataclasses import dataclass
 
 from langchain.agents import create_agent
 from langchain.tools import tool
+
 from config import get_model
 
-# ── Data model (re-introduced; no cross-stage imports) ───────────────────────
+# ── Data model ───────────────────────────────────────────────────────────────
 
 
 @dataclass
@@ -30,35 +30,82 @@ class EvalCase:
     expected: str
 
 
+@dataclass(frozen=True)
+class Surface:
+    """One editable surface in the harness.
+
+    Attributes:
+        name: Human-readable name (e.g. ``"prompt"``).
+        target: Where to apply the value, in ``module:attribute`` format.
+        base_value: The default value before any edit.
+    """
+
+    name: str
+    target: str
+    base_value: str
+
+
+@dataclass(frozen=True)
+class Variant:
+    """A frozen snapshot of all surface values plus a label.
+
+    Attributes:
+        label: Human-readable identifier (e.g. ``"baseline"``).
+        values: Mapping of surface name → current value.
+    """
+
+    label: str
+    values: dict[str, str]
+
+
 # ── Eval suite ───────────────────────────────────────────────────────────────
 
 CASES = [
     EvalCase(
-        question="A warehouse has 847 pallets, each containing 136 items. How many items total?",
-        expected="115192",
+        question="A bakery sells 3 cakes at $12 each. What is the total revenue?",
+        expected="36",
     ),
     EvalCase(
-        question="A factory produces 4,725 units in 7 days. If each unit costs $18, what is the total weekly revenue?",
-        expected="85050",
+        question="If you divide 144 by 12, what do you get?",
+        expected="12",
     ),
     EvalCase(
-        question="A city's population grew by 3.7% from 284,500. What is the new population?",
-        expected="295026.5",
+        question="A train travels at 60 mph for 2.5 hours. How many miles does it cover?",
+        expected="150",
     ),
     EvalCase(
-        question="You buy 23 notebooks at $4.75 each and 15 pens at $1.60 each. What is the total cost?",
-        expected="133.25",
+        question="What is 15% of 200?",
+        expected="30",
     ),
     EvalCase(
-        question="If 98,765 widgets are packed into boxes of 347 each, how many full boxes are there?",
-        expected="284",
+        question="A recipe needs 2/3 cup of sugar. If you triple the recipe, how many cups of sugar do you need?",
+        expected="2",
     ),
 ]
 
 
-# ── System prompt (module-level so it can be patched in later stages) ────────
+# ── System prompt ────────────────────────────────────────────────────────────
 
 BASE_PROMPT = "You are a helpful assistant."
+
+
+# ── Surface declaration ─────────────────────────────────────────────────────
+
+PROMPT_SURFACE = Surface(
+    name="prompt",
+    target="stages.stage_03_surface:BASE_PROMPT",
+    base_value=BASE_PROMPT,
+)
+
+SURFACES = [PROMPT_SURFACE]
+
+
+def baseline_variant(surfaces: list[Surface]) -> Variant:
+    """Build the baseline variant from the declared surfaces."""
+    return Variant(
+        label="baseline",
+        values={s.name: s.base_value for s in surfaces},
+    )
 
 
 # ── Tool ─────────────────────────────────────────────────────────────────────
@@ -69,10 +116,8 @@ def calculator(expression: str) -> str:
     """Evaluate a mathematical expression and return the numeric result.
 
     Args:
-        expression: A Python-syntax math expression like ``3 * 12`` or
-            ``144 / 12``.
+        expression: A Python-syntax math expression like ``3 * 12``.
     """
-    # Restricted eval: allow only math operations.
     allowed = set("0123456789+-*/.() ")
     if not all(ch in allowed for ch in expression):
         return f"Error: invalid characters in expression: {expression}"
@@ -87,13 +132,13 @@ def calculator(expression: str) -> str:
 
 
 def build_inner_agent():
-    """Build the inner LangChain agent with the current BASE_PROMPT."""
+    """Build the inner agent using the current BASE_PROMPT."""
     model = get_model()
     return create_agent(model, tools=[calculator], system_prompt=BASE_PROMPT)
 
 
 def inner_agent(question: str) -> str:
-    """Run one question through the inner agent and return the answer text."""
+    """Run one question through the inner agent."""
     agent = build_inner_agent()
     result = agent.invoke(
         {"messages": [{"role": "user", "content": question}]},
@@ -101,17 +146,15 @@ def inner_agent(question: str) -> str:
     return result["messages"][-1].content
 
 
-# ── Runner (re-introduced; no cross-stage imports) ───────────────────────────
+# ── Runner ───────────────────────────────────────────────────────────────────
 
 
 def normalize(text: str) -> str:
     """Normalize an answer for comparison."""
     text = text.strip()
-    text = re.sub(r",\s*", "", text)
     numbers = re.findall(r"-?\d+\.?\d*", text)
     if numbers:
         text = numbers[-1]
-    text = text.rstrip(".")
     if text.endswith(".0"):
         text = text[:-2]
     return text
@@ -125,7 +168,6 @@ def run_eval(
     passed = 0
     for case in cases:
         answer = agent(case.question)  # ty:ignore[call-non-callable]
-
         if normalize(answer) == normalize(case.expected):
             passed += 1
             print(f"  ✓ {case.question[:50]}…  →  {normalize(answer)}")
@@ -141,7 +183,15 @@ def run_eval(
 
 
 def main() -> None:
-    print("Stage 02 — Inner Agent (LangChain + calculator)\n")
+    print("Stage 03 — Surface & Variant\n")
+
+    baseline = baseline_variant(SURFACES)
+    print(f"Surfaces declared: {[s.name for s in SURFACES]}")
+    print(f"Baseline variant:  {baseline.label}")
+    for name, value in baseline.values.items():
+        print(f"  {name}: {value!r}")
+
+    print("\nRunning eval with baseline prompt…\n")
     passed, total = run_eval(CASES, inner_agent)
     print(f"\nBaseline: {passed}/{total}")
 

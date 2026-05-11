@@ -18,7 +18,7 @@ The hill-climbing loop.  Iterate N times.  Keep a candidate iff
 ## Run it
 
 ```bash
-uv run python stages/stage_07_outer_loop.py
+uv run python stages_a/stage_07_outer_loop.py
 ```
 
 Expected output: a multi-iteration run with at least one accepted candidate

@@ -19,7 +19,7 @@ editable" first-class.
 ## Run it
 
 ```bash
-uv run python stages/stage_03_surface.py
+uv run python stages_a/stage_03_surface.py
 ```
 
 Expected output: same score as stage 02 (the variant is defined but not
