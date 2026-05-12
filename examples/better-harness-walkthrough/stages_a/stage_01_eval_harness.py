@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from typing import Callable
 
 
 # ── Data model ───────────────────────────────────────────────────────────────
@@ -88,7 +89,7 @@ def normalize(text: str) -> str:
 
 def run_eval(
     cases: list[EvalCase],
-    agent: object,
+    agent: Callable[[str], str],
 ) -> tuple[int, int]:
     """Run cases through an agent callable and return (passed, total).
 
@@ -102,7 +103,7 @@ def run_eval(
     """
     passed = 0
     for case in cases:
-        answer = agent(case.question)  # ty:ignore[call-non-callable]
+        answer = agent(case.question)
         if normalize(answer) == normalize(case.expected):
             passed += 1
             print(f"  ✓ {case.question[:50]}…  →  {normalize(answer)}")

@@ -18,7 +18,7 @@ import tempfile
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Callable, Literal
 
 from langchain.agents import create_agent
 from langchain.tools import tool
@@ -214,7 +214,7 @@ def calculator(expression: str) -> str:
 def build_inner_agent():
     """Build the inner agent using the current BASE_PROMPT."""
     model = get_model()
-    return create_agent(model, tools=[calculator], prompt=BASE_PROMPT)
+    return create_agent(model, tools=[calculator], system_prompt=BASE_PROMPT)
 
 
 def inner_agent(question: str) -> str:
@@ -238,7 +238,7 @@ def normalize(text: str) -> str:
     return text
 
 
-def run_eval(cases: list[EvalCase], agent, *, split: str | None = None) -> SplitResult:
+def run_eval(cases: list[EvalCase], agent: Callable[[str], str], *, split: str | None = None) -> SplitResult:
     """Run cases through an agent, optionally filtering by split."""
     filtered = [c for c in cases if split is None or c.split == split]
     passed = 0

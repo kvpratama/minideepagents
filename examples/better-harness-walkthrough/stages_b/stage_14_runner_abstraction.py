@@ -126,7 +126,7 @@ def apply_variant(experiment: Experiment, variant: Variant) -> None:
 
 
 def inner_agent(question: str) -> str:
-    agent = create_agent(get_model(), tools=[calculator], prompt=BASE_PROMPT)
+    agent = create_agent(get_model(), tools=[calculator], system_prompt=BASE_PROMPT)
     return agent.invoke({"messages": [{"role": "user", "content": question}]})["messages"][-1].content
 
 

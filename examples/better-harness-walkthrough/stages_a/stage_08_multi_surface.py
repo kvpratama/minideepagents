@@ -17,7 +17,7 @@ import re
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Callable
 
 from deepagents import create_deep_agent
 from deepagents.backends import FilesystemBackend
@@ -243,7 +243,7 @@ def normalize(text: str) -> str:
 
 def run_eval(
     cases: list[EvalCase],
-    agent: object,
+    agent: Callable[[str], str],
     *,
     split: str | None = None,
 ) -> SplitResult:
@@ -252,7 +252,7 @@ def run_eval(
     passed = 0
     failures: list[str] = []
     for case in filtered:
-        answer = agent(case.question)  # ty:ignore[call-non-callable]
+        answer = agent(case.question)
         if normalize(answer) == normalize(case.expected):
             passed += 1
         else:
