@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Callable, Literal
 
 from langchain.agents import create_agent
-from langchain.tools import tool
+from langchain.tools import tool, BaseTool
 
 from config import get_model
 
@@ -75,11 +75,21 @@ class SplitResult:
 # ── Eval suite ───────────────────────────────────────────────────────────────
 
 CASES = [
-    EvalCase("A bakery sells 3 cakes at $12 each. What is the total revenue?", "36", "train"),
+    EvalCase(
+        "A bakery sells 3 cakes at $12 each. What is the total revenue?", "36", "train"
+    ),
     EvalCase("If you divide 144 by 12, what do you get?", "12", "train"),
-    EvalCase("A train travels at 60 mph for 2.5 hours. How many miles does it cover?", "150", "train"),
+    EvalCase(
+        "A train travels at 60 mph for 2.5 hours. How many miles does it cover?",
+        "150",
+        "train",
+    ),
     EvalCase("What is 15% of 200?", "30", "holdout"),
-    EvalCase("A recipe needs 2/3 cup of sugar. If you triple the recipe, how many cups of sugar do you need?", "2", "holdout"),
+    EvalCase(
+        "A recipe needs 2/3 cup of sugar. If you triple the recipe, how many cups of sugar do you need?",
+        "2",
+        "holdout",
+    ),
 ]
 
 
@@ -97,7 +107,7 @@ SURFACES = [
     Surface(
         name="prompt",
         kind="module_attr",
-        target="stages_b.stage_09_workspace_file_surface:BASE_PROMPT",
+        target=f"{__name__}:BASE_PROMPT",
         base_value=BASE_PROMPT,
         filename="prompt.txt",
     ),
@@ -165,18 +175,14 @@ def workspace_override_context(
 def attr_overrides(variant: Variant, surfaces: list[Surface]) -> dict[str, str]:
     """Return module_attr overrides keyed by ``module:attribute`` target."""
     return {
-        s.target: variant.values[s.name]
-        for s in surfaces
-        if s.kind == "module_attr"
+        s.target: variant.values[s.name] for s in surfaces if s.kind == "module_attr"
     }
 
 
 def file_overrides(variant: Variant, surfaces: list[Surface]) -> dict[str, str]:
     """Return workspace_file overrides keyed by relative file path."""
     return {
-        s.target: variant.values[s.name]
-        for s in surfaces
-        if s.kind == "workspace_file"
+        s.target: variant.values[s.name] for s in surfaces if s.kind == "workspace_file"
     }
 
 
@@ -208,13 +214,65 @@ def calculator(expression: str) -> str:
     return str(result)
 
 
+def make_calculator_with_guidance() -> BaseTool:
+    """Build a calculator tool whose description includes the current guidance.
+
+    NOTE: Local deviation from the canonical Stage 09 walkthrough.
+    The stage's markdown intentionally stops at demonstrating the
+    swap-and-restore *mechanism* — the upstream `calculator` tool reads
+    the guidance file purely for side-effect (`_ = read_text()`), so the
+    workspace_file content never reaches the LLM. LLM-visible content
+    via on-disk surfaces is the subject of later stages (skill .md files
+    in stage 11, TOML config in stage 13).
+
+    This helper bakes the current file content into the tool's
+    `description`, which `create_agent` serializes into the function
+    schema sent to the model. That makes the workspace_file override
+    empirically observable in LangSmith traces (baseline vs improved
+    tool descriptions differ), at the cost of diverging from the
+    canonical stage. Remove this helper and revert `build_inner_agent`
+    to use the plain `calculator` tool to restore upstream fidelity.
+    """
+
+    @tool
+    def calculator_with_guidance(expression: str) -> str:
+        """Evaluate a mathematical expression.
+
+        Args:
+            expression: A Python-syntax math expression like ``3 * 12``.
+        """
+        allowed = set("0123456789+-*/.() ")
+        if not all(ch in allowed for ch in expression):
+            return f"Error: invalid characters in expression: {expression}"
+        try:
+            result = eval(expression)  # noqa: S307 — restricted to digits and math ops
+        except Exception as exc:
+            return f"Error: {exc}"
+        return str(result)
+
+    if WORKSPACE_ROOT is not None:
+        guidance_path = WORKSPACE_ROOT / GUIDANCE_FILENAME
+        if guidance_path.exists():
+            c_guidance = guidance_path.read_text()
+            # Update the tool description to include current guidance
+            calculator_with_guidance.description = (
+                f"Evaluate a mathematical expression. {c_guidance} "
+                "Input: a Python-syntax math expression like '3 * 12'."
+            )
+    return calculator_with_guidance
+
+
 # ── Inner agent ──────────────────────────────────────────────────────────────
 
 
 def build_inner_agent():
     """Build the inner agent using the current BASE_PROMPT."""
     model = get_model()
-    return create_agent(model, tools=[calculator], system_prompt=BASE_PROMPT)
+    return create_agent(
+        model,
+        tools=[make_calculator_with_guidance()],
+        system_prompt=BASE_PROMPT,
+    )
 
 
 def inner_agent(question: str) -> str:
@@ -238,7 +296,9 @@ def normalize(text: str) -> str:
     return text
 
 
-def run_eval(cases: list[EvalCase], agent: Callable[[str], str], *, split: str | None = None) -> SplitResult:
+def run_eval(
+    cases: list[EvalCase], agent: Callable[[str], str], *, split: str | None = None
+) -> SplitResult:
     """Run cases through an agent, optionally filtering by split."""
     filtered = [c for c in cases if split is None or c.split == split]
     passed = 0
@@ -251,7 +311,9 @@ def run_eval(cases: list[EvalCase], agent: Callable[[str], str], *, split: str |
             failures.append(
                 f"Q: {case.question}  Got: {normalize(answer)}  Expected: {normalize(case.expected)}"
             )
-    return SplitResult(split=split or "all", passed=passed, total=len(filtered), failures=failures)
+    return SplitResult(
+        split=split or "all", passed=passed, total=len(filtered), failures=failures
+    )
 
 
 def run_variant(
@@ -285,7 +347,9 @@ def main() -> None:
         print(f"  [{surface.kind}] {surface.name} = {baseline.values[surface.name]!r}")
 
     base_train = run_variant(baseline, CASES, SURFACES, WORKSPACE_ROOT, split="train")
-    base_holdout = run_variant(baseline, CASES, SURFACES, WORKSPACE_ROOT, split="holdout")
+    base_holdout = run_variant(
+        baseline, CASES, SURFACES, WORKSPACE_ROOT, split="holdout"
+    )
     print(
         f"\nBaseline: train {base_train.passed}/{base_train.total}  "
         f"holdout {base_holdout.passed}/{base_holdout.total}\n"
@@ -317,7 +381,9 @@ def main() -> None:
     print(f"\nBefore override: {GUIDANCE_FILENAME!r} exists? {guidance_path.exists()}")
     imp_train = run_variant(improved, CASES, SURFACES, WORKSPACE_ROOT, split="train")
     print(f"After  override: {GUIDANCE_FILENAME!r} exists? {guidance_path.exists()}")
-    imp_holdout = run_variant(improved, CASES, SURFACES, WORKSPACE_ROOT, split="holdout")
+    imp_holdout = run_variant(
+        improved, CASES, SURFACES, WORKSPACE_ROOT, split="holdout"
+    )
 
     print(
         f"\nImproved: train {imp_train.passed}/{imp_train.total}  "
