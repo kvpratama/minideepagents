@@ -27,7 +27,7 @@ from deepagents.backends import FilesystemBackend
 from langchain.agents import create_agent
 from langchain.tools import tool
 
-from config import get_model, get_settings
+from config import get_model, get_outer_model
 
 MAX_ITERATIONS = 2
 
@@ -194,7 +194,12 @@ class RunLayout:
             "created_at": datetime.now(tz=UTC).isoformat(timespec="seconds"),
             "max_iterations": max_iterations,
             "surfaces": [
-                {"name": s.name, "kind": s.kind, "target": s.target, "filename": s.filename}
+                {
+                    "name": s.name,
+                    "kind": s.kind,
+                    "target": s.target,
+                    "filename": s.filename,
+                }
                 for s in surfaces
             ],
         }
@@ -209,7 +214,9 @@ class RunLayout:
     def write_decision(self, decision: IterationDecision) -> None:
         d = self.iteration_dir(decision.iteration)
         d.mkdir(parents=True, exist_ok=True)
-        (d / "decision.json").write_text(json.dumps(decision.to_dict(), indent=2) + "\n")
+        (d / "decision.json").write_text(
+            json.dumps(decision.to_dict(), indent=2) + "\n"
+        )
         verdict = "accepted" if decision.accepted else "rejected"
         md = (
             f"# Iteration {decision.iteration}\n\n"
@@ -225,18 +232,30 @@ class RunLayout:
         (d / "decision.md").write_text(md)
 
     def write_report(self, report: RunReport) -> None:
-        (self.root / "report.json").write_text(json.dumps(report.to_dict(), indent=2) + "\n")
+        (self.root / "report.json").write_text(
+            json.dumps(report.to_dict(), indent=2) + "\n"
+        )
         (self.root / "report.md").write_text(report.to_markdown())
 
 
 # ── Eval suite + surfaces ────────────────────────────────────────────────────
 
 CASES = [
-    EvalCase("A bakery sells 3 cakes at $12 each. What is the total revenue?", "36", "train"),
+    EvalCase(
+        "A bakery sells 3 cakes at $12 each. What is the total revenue?", "36", "train"
+    ),
     EvalCase("If you divide 144 by 12, what do you get?", "12", "train"),
-    EvalCase("A train travels at 60 mph for 2.5 hours. How many miles does it cover?", "150", "train"),
+    EvalCase(
+        "A train travels at 60 mph for 2.5 hours. How many miles does it cover?",
+        "150",
+        "train",
+    ),
     EvalCase("What is 15% of 200?", "30", "holdout"),
-    EvalCase("A recipe needs 2/3 cup of sugar. If you triple the recipe, how many cups of sugar do you need?", "2", "holdout"),
+    EvalCase(
+        "A recipe needs 2/3 cup of sugar. If you triple the recipe, how many cups of sugar do you need?",
+        "2",
+        "holdout",
+    ),
 ]
 
 BASE_PROMPT = "You are a helpful assistant."
@@ -245,7 +264,7 @@ SURFACES = [
     Surface(
         name="prompt",
         kind="module_attr",
-        target="stages_b.stage_10_run_layout:BASE_PROMPT",
+        target=f"{__name__}:BASE_PROMPT",
         base_value=BASE_PROMPT,
         filename="prompt.txt",
     ),
@@ -257,9 +276,7 @@ def baseline_variant() -> Variant:
 
 
 def build_variant(label: str, values: dict[str, str]) -> Variant:
-    changed = tuple(
-        sorted(s.name for s in SURFACES if values[s.name] != s.base_value)
-    )
+    changed = tuple(sorted(s.name for s in SURFACES if values[s.name] != s.base_value))
     return Variant(label=label, values=values, changed_surfaces=changed)
 
 
@@ -274,7 +291,9 @@ def patch_module_attrs(overrides: dict[str, str]) -> None:
 
 
 def apply_variant(variant: Variant) -> None:
-    overrides = {s.target: variant.values[s.name] for s in SURFACES if s.kind == "module_attr"}
+    overrides = {
+        s.target: variant.values[s.name] for s in SURFACES if s.kind == "module_attr"
+    }
     patch_module_attrs(overrides)
 
 
@@ -299,7 +318,9 @@ def calculator(expression: str) -> str:
 
 def inner_agent(question: str) -> str:
     agent = create_agent(get_model(), tools=[calculator], system_prompt=BASE_PROMPT)
-    return agent.invoke({"messages": [{"role": "user", "content": question}]})["messages"][-1].content
+    return agent.invoke({"messages": [{"role": "user", "content": question}]})[
+        "messages"
+    ][-1].content
 
 
 def normalize(text: str) -> str:
@@ -325,7 +346,13 @@ def run_eval(cases: list[EvalCase], variant: Variant, *, split: str) -> SplitRes
             failures.append(
                 f"Q: {case.question}  Got: {normalize(ans)}  Expected: {case.expected}"
             )
-    return SplitResult(split=split, variant=variant.label, passed=passed, total=len(filtered), failures=failures)
+    return SplitResult(
+        split=split,
+        variant=variant.label,
+        passed=passed,
+        total=len(filtered),
+        failures=failures,
+    )
 
 
 # ── Outer agent ──────────────────────────────────────────────────────────────
@@ -351,9 +378,10 @@ def propose(current_value: str, train_failures: list[str], iteration: int) -> st
         task.append("- None")
     (workspace / "task.md").write_text("\n".join(task) + "\n")
 
-    settings = get_settings()
     backend = FilesystemBackend(root_dir=str(workspace), virtual_mode=True)
-    agent = create_deep_agent(model=settings.model, system_prompt=OUTER_SYSTEM_PROMPT, backend=backend)
+    agent = create_deep_agent(
+        model=get_outer_model(), system_prompt=OUTER_SYSTEM_PROMPT, backend=backend
+    )
     agent.invoke(
         {
             "messages": [
@@ -381,7 +409,9 @@ def loop(layout: RunLayout, *, max_iterations: int = MAX_ITERATIONS) -> RunRepor
 
     base_train = run_eval(CASES, baseline, split="train")
     base_holdout = run_eval(CASES, baseline, split="holdout")
-    print(f"Baseline: train {base_train.passed}/{base_train.total}  holdout {base_holdout.passed}/{base_holdout.total}\n")
+    print(
+        f"Baseline: train {base_train.passed}/{base_train.total}  holdout {base_holdout.passed}/{base_holdout.total}\n"
+    )
 
     current = baseline
     cur_train, cur_holdout = base_train, base_holdout
